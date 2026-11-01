@@ -25,4 +25,70 @@
     <select name="plan" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
       <option value="all" {% if plan_filter == 'all' %}selected{% endif %}>All Plans</option>
       <option value="DAILY" {% if plan_filter == 'DAILY' %}selected{% endif %}>Daily</option>
-      <option value="WEEKLY" {% if plan_filter == 'WEEKLY' %}selected{%
+      <option value="WEEKLY" {% if plan_filter == 'WEEKLY' %}selected{% endif %}>Weekly</option>
+      <option value="MONTHLY" {% if plan_filter == 'MONTHLY' %}selected{% endif %}>Monthly</option>
+    </select>
+    
+    <button type="submit" style="padding: 10px 20px;">Search</button>
+  </form>
+  
+  {% if page.object_list %}
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 12px;">Name</th>
+          <th style="text-align: left; padding: 12px;">WhatsApp</th>
+          <th style="text-align: left; padding: 12px;">Email</th>
+          <th style="text-align: left; padding: 12px;">Status</th>
+          <th style="text-align: left; padding: 12px;">Tags</th>
+          <th style="text-align: right; padding: 12px;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for client in page.object_list %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 12px;">
+            <strong>{{ client.full_name }}</strong>
+            {% if client.is_banned %}
+              <span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px;">BANNED</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px; color: #6b7280;">{{ client.whatsapp_number }}</td>
+          <td style="padding: 12px; color: #6b7280;">{{ client.email|default:"—" }}</td>
+          <td style="padding: 12px;">
+            {% if client.is_subscribed %}
+              <span style="color: #16a34a; font-weight: 600;">● Active</span>
+            {% else %}
+              <span style="color: #ef4444; font-weight: 600;">● Expired</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px; font-size: 12px; color: #6b7280;">
+            {{ client.tags|default:"—" }}
+          </td>
+          <td style="text-align: right; padding: 12px;">
+            <a href="{% url 'client_detail' client.id %}" style="color: #2563eb; text-decoration: none; font-weight: 600;">View →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  {% include "core/_pagination.html" %}
+  
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔍</div>
+    <div class="empty-state-title">No clients found</div>
+    <p class="empty-state-text">
+      {% if query %}
+        No clients match "<strong>{{ query }}</strong>". Try a different search.
+      {% else %}
+        No clients registered yet. <a href="{% url 'register' %}">Register your first client →</a>
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
