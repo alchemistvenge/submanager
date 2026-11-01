@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}{{ message_obj.subject }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+  <!-- Header with actions -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+    <div>
+      <h1 style="margin: 0 0 8px 0;">
+        {% if message_obj.is_pinned %}📌 {% endif %}
+        {{ message_obj.subject }}
+      </h1>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 14px; color: #6b7280;">
+        <span><strong>From:</strong> {{ message_obj.sender.username }}</span>
+        <span><strong>To:</strong> {{ message_obj.recipient.username|default:"All Staff" }}</span>
+        <span><strong>Date:</strong> {{ message_obj.created_at|date:"M d, Y H:i" }}</span>
+        {% if message_obj.read_at %}
+          <span><strong>Read:</strong> {{ message_obj.read_at|date:"M d, H:i" }}</span>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <form method="post" action="{% url 'pin_message' message_obj.id %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" style="padding: 6px 12px; font-size: 12px; background: {% if message_obj.is_pinned %}#f59e0b{% else %}#e5e7eb{% endif %}; color: {% if message_obj.is_pinned %}#fff{% else %}#374151{% endif %};">
+          {% if message_obj.is_pinned %}📌 Unpin{% else %}📌 Pin{% endif %}
+        </button>
+      </form>
+      <a href="{% url 'forward_message' message_obj.id %}" style="padding: 6px 12px; font-size: 12px; background: #3b82f6; color: #fff; border-radius: 4px; text-decoration: none;">↗️ Forward</a>
+    </div>
+  </div>
+  
+  <!-- Badges -->
+  <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
+    <span style="background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+      {{ message_obj.get_message_type_display }}
+    </span>
+    
+    {% if message_obj.priority == 'URGENT' %}
+      <span style="background: #ef4444; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 12px;">🔴 Urgent</span>
+    {% elif message_obj.priority == 'HIGH' %}
+      <span style="background: #f59e0b; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 12px;">🟠 High</span>
+    {% elif message_obj.priority == 'LOW' %}
+      <span style="background: #e5e7eb; color: #6b7280; padding: 4px 10px; border-radius: 4px; font-size: 12px;">Low</span>
+    {% else %}
+      <span style="background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 4px; font-size: 12px;">Normal</span>
+    {% endif %}
+    
+    <span style="background: {% if message_obj.status == 'OPEN' %}#fef3c7{% elif message_obj.status == 'IN_PROGRESS' %}#dbeafe{% elif message_obj.status == 'RESOLVED' %}#dcfce7{% else %}#e5e7eb{% endif %}; color: #374151; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+      {{ message_obj.get_status_display }}
+    </span>
+    
+    {% if message_obj.due_date %}
+      <span style="background: {% if message_obj.is_overdue %}#fee2e2{% else %}#e5e7eb{% endif %}; color: {% if message_obj.is_overdue %}#991b1b{% else %}#374151{% endif %}; padding: 4px 10px; border-radius: 4px; font-size: 12px;">
+        ⏰ Due: {{ message_obj.due_date|date:"M d, Y H:i" }}
+        {% if message_obj.is_overdue %}(OVERDUE){% endif %}
+      </span>
+    {% endif %}
+  </div>
+  
+  {% if message_obj.client %}
+  <div style="margin-bottom: 20px; padding: 12px; background: #eff6ff; border-radius: 6px; font-size: 14px;">
+    <strong>About client:</strong> {{ message_obj.client.full_name }}
+    <a href="{% url 'client_detail' message_obj.client.id %}" style="margin-left: 8px;">View client →</a>
+  </div>
+  {% endif %}
+  
+  {% if message_obj.mentions.all %}
+  <div style="margin-bottom: 20px; font-size: 13px; color: #6b7280;">
+    <strong>Mentions:</strong> 
+    {% for mention in message_obj.mentions.all %}
+      <span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px;">@{{ mention.username }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+  
+  <!-- Message content -->
+  <div style="border-top: 2px solid #e5e7eb; padding-top: 20px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px;">{{ message_obj.content }}</div>
+  
+  <!-- Attachments -->
+  {% if attachments %}
+  <div style="border-top: 2px solid #e5e7eb; padding-top: 20px; margin-bottom: 24px;">
+    <h3 style="margin-top: 0;">📎 Attachments ({{ attachments.count }})</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;">
+      {% for att in attachments %}
+      <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; text-align: center;">
+        {% if att.is_image %}
+          <img src="{{ att.file.url }}" alt="{{ att.filename }}" style="max-width: 100%; max-height: 120px; border-radius: 4px; margin-bottom: 8px;">
+        {% else %}
+          <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
+        {% endif %}
+        <div style="font-size: 12px; color: #374151; word-break: break-all;">{{ att.filename }}</div>
+        <div style="font-size: 11px; color: #9ca3af;">{{ att.size_display }}</div>
+        <a href="{{ att.file.url }}" download style="display: block; margin-top: 8px; color: #2563eb; font-size: 12px;">Download</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  
+  <!-- Status update (for recipients) -->
+  {% if message_obj.recipient == user or user.is_owner or user.is_manager %}
+  <div style="border-top: 2px solid #e5e7eb; padding-top: 20px; margin-bottom: 24px;">
+    <h3 style="margin-top: 0;">Update Status</h3>
+    <form method="post" action="{% url 'update_message_status' message_obj.id %}" style="display: flex; gap: 8px; flex-wrap: wrap;">
+      {% csrf_token %}
+      {% for code, label in message_obj.STATUS_CHOICES %}
+        <button type="submit" name="status" value="{{ code }}" style="padding: 8px 16px; font-size: 13px; background: {% if message_obj.status == code %}#16a34a{% else %}#e5e7eb{% endif %}; color: {% if message_obj.status == code %}#fff{% else %}#374151{% endif %};">
+          {{ label }}
+        </button>
+      {% endfor %}
+    </form>
+  </div>
+  {% endif %}
+  
+  <!-- Thread/Replies -->
+  {% if replies or message_obj.parent %}
+  <div style="border-top: 2px solid #e5e7eb; padding-top: 20px; margin-bottom: 24px;">
+    <h3 style="margin-top: 0;">💬 Thread ({{ replies.count }} replies)</h3>
+    
+    {% if message_obj.parent %}
+    <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid #3b82f6;">
+      <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        In reply to: <a href="{% url 'view_message' message_obj.parent.id %}">{{ message_obj.parent.subject }}</a> by {{ message_obj.parent.sender.username }}
+      </div>
+    </div>
+    {% endif %}
+    
+    {% for reply in replies %}
+    <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #10b981;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <strong>{{ reply.sender.username }}</strong>
+        <small style="color: #9ca3af;">{{ reply.created_at|date:"M d, H:i" }}</small>
+      </div>
+      <div style="white-space: pre-wrap;">{{ reply.content }}</div>
+      {% if reply.attachments.all %}
+        <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">📎 {{ reply.attachments.count }} attachment(s)</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  
+  <!-- Reply form -->
+  <div style="border-top: 2px solid #e5e7eb; padding-top: 20px;">
+    <h3 style="margin-top: 0;">Reply</h3>
+    <form method="post" action="{% url 'reply_message' message_obj.id %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <textarea name="content" rows="4" placeholder="Write your reply... Use @username to mention someone" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 12px;"></textarea>
+      <input type="file" name="attachments" multiple style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 12px;">
+      <button type="submit">Send Reply</button>
+    </form>
+  </div>
+  
+  <div style="margin-top: 32px;">
+    <a href="{% url 'message_inbox' %}" style="color: #6b7280;">← Back to Inbox</a>
+  </div>
+</div>
+{% endblock %}

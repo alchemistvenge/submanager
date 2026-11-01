@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Security Scanner{% endblock %}
+
+{% block content %}
+<style>
+  #scanner-app {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: #334155;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    border-radius: 12px;
+    transition: background .25s, color .25s;
+  }
+  #scanner-app[data-theme="light"] {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  #scanner-app .scan-toolbar {
+    display:flex; justify-content:space-between; align-items:center;
+    gap:12px; flex-wrap:wrap; margin-bottom:16px;
+  }
+  #scanner-app .tool-btn {
+    background: var(--card); color: var(--text);
+    border:1px solid var(--border); padding:8px 14px;
+    border-radius:8px; cursor:pointer; font-size:13px;
+    transition: all 0.2s;
+  }
+  #scanner-app .tool-btn:hover {
+    opacity: 0.8;
+  }
+  #scanner-app .status-pill {
+    font-size:12px; padding:6px 12px; border-radius:20px;
+    background:#16a34a; color:#fff; font-weight: 600;
+  }
+  #scanner-app .status-pill.offline { background:#f59e0b; }
+  #scanner-app .viewer-wrap {
+    background:#000; border-radius:12px; overflow:hidden;
+    max-width:420px; margin:0 auto;
+  }
+  #scanner-app .result {
+    margin-top:20px; padding:22px; border-radius:12px;
+    text-align:center; display:none;
+  }
+  #scanner-app .result.success { background:#14532d; color:#dcfce7; }
+  #scanner-app .result.error   { background:#7f1d1d; color:#fee2e2; }
+  #scanner-app .result.pending { background:#78350f; color:#fef3c7; }
+  #scanner-app .result h2 { margin:0 0 12px 0; font-size:28px; }
+  #scanner-app .result p  { margin:6px 0; }
+  #scanner-app .result img.client-photo {
+    width:110px;height:110px;object-fit:cover;border-radius:50%;
+    border:3px solid #fff; margin:12px auto; display:block;
+  }
+  #scanner-app .queue-box {
+    margin-top:20px; padding:14px; border:1px dashed var(--border);
+    border-radius:10px; font-size:13px; color:var(--muted);
+  }
+  #scanner-app .hint { color:var(--muted); font-size:13px; }
+  #scanner-app button {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  #scanner-app button:hover {
+    opacity: 0.9;
+  }
+</style>
+
+<div id="scanner-app" data-theme="dark">
+
+  <div class="scan-toolbar">
+    <h1 style="margin:0;font-size:22px;">📷 Access Scanner</h1>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span id="connection-pill" class="status-pill">● ONLINE</span>
+      <button class="tool-btn" onclick="toggleTheme()">🌗 Theme</button>
+      <button class="tool-btn" onclick="toggleSound()" id="sound-btn">🔊 Sound: ON</button>
+    </div>
+  </div>
+
+  <p class="hint">Point the camera at the client's WhatsApp QR code.</p>
+
+  <div class="viewer-wrap"><div id="reader"></div></div>
+
+  <div id="result-box" class="result">
+    <h2 id="result-title"></h2>
+    <div id="client-details" style="display:none;text-align:left;">
+      <p><strong>Name:</strong> <span id="res-name"></span></p>
+      <p><strong>Plan:</strong> <span id="res-plan"></span></p>
+      <p><strong>Expires:</strong> <span id="res-expires"></span></p>
+      <img id="res-photo" class="client-photo" src="" alt="Client photo">
+      <p class="hint" style="text-align:center;">⬆️ Confirm this photo matches the person</p>
+    </div>
+    <p id="res-reason"></p>
+    <button onclick="resetScanner()" style="margin-top:16px;">Scan Next</button>
+  </div>
+
+  <div class="queue-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span>📥 Offline queue: <strong id="queue-count">0</strong> pending</span>
+      <button class="tool-btn" onclick="syncQueue()">🔄 Sync Now</button>
+    </div>
+    <p style="margin:8px 0 0 0;">
+      Offline scans are recorded only. <strong>Do not grant access on a PENDING result.</strong>
+    </p>
+  </div>
+
+  <div style="margin-top:16px;padding:12px;background:var(--card);border-radius:8px;font-size:12px;color:var(--muted);">
+    <strong>Keyboard Shortcuts:</strong> ESC = Reset Scanner | T = Toggle Theme | M = Mute Sound | S = Sync Queue
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+  const QUEUE_KEY = 'submanager_pending_scans';
+  let html5QrcodeScanner;
+  let soundEnabled = true;
+  let audioCtx = null;
+
+  /* ---------- THEME ---------- */
+  function applyTheme(theme) {
+    document.getElementById('scanner-app').setAttribute('data-theme', theme);
+    localStorage.setItem('scanner_theme', theme);
+  }
+  function toggleTheme() {
+    const current = document.getElementById('scanner-app').getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+  applyTheme(localStorage.getItem('scanner_theme') || 'dark');
+
+  /* ---------- SOUND + HAPTICS ---------- */
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('sound-btn').innerText = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+  }
+
+  function beep(type) {
+    if (!soundEnabled) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.type = type === 'success' ? 'sine' : 'sawtooth';
+      osc.frequency.value = type === 'success' ? 880 : 180;
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    } catch (e) { /* Audio unsupported: fail silently */ }
+
+    if (navigator.vibrate) {
+      navigator.vibrate(type === 'success' ? [60] : [100, 60, 100]);
+    }
+  }
+
+  /* ---------- CSRF ---------- */
+  function getCookie(name) {
+    let value = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.substring(0, name.length + 1) === name + '=') {
+          value = decodeURIComponent(c.substring(name.length + 1));
+        }
+      });
+    }
+    return value;
+  }
+
+  /* ---------- OFFLINE QUEUE ---------- */
+  function getQueue() {
+    try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+  function updateQueueCount() {
+    document.getElementById('queue-count').innerText = getQueue().length;
+  }
+  function enqueueScan(qrData) {
+    const queue = getQueue();
+    queue.push({ qr_data: qrData, scanned_at: new Date().toISOString() });
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    updateQueueCount();
+  }
+
+  async function syncQueue() {
+    let queue = getQueue();
+    if (queue.length === 0) {
+      console.log('Offline queue is empty.');
+      return;
+    }
+    if (!navigator.onLine) {
+      alert('Still offline. Records will sync when connectivity returns.');
+      return;
+    }
+
+    let synced = 0;
+    const remaining = [];
+
+    for (const item of queue) {
+      try {
+        const response = await fetch('/api/scan/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+          body: JSON.stringify({ qr_data: item.qr_data })
+        });
+        // Server responded (even if denied): the attempt is now logged.
+        await response.json();
+        synced++;
+      } catch (e) {
+        remaining.push(item);
+      }
+    }
+
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+    updateQueueCount();
+    console.log(`${synced} offline scan(s) synced. ${remaining.length} still pending.`);
+  }
+
+  function updateConnection() {
+    const pill = document.getElementById('connection-pill');
+    pill.innerText = navigator.onLine ? '● ONLINE' : '● OFFLINE';
+    pill.classList.toggle('offline', !navigator.onLine);
+    if (navigator.onLine) syncQueue();
+  }
+  window.addEventListener('online', updateConnection);
+  window.addEventListener('offline', updateConnection);
+
+  /* ---------- RESULT RENDERING ---------- */
+  function showResult(type, title, data) {
+    const box = document.getElementById('result-box');
+    const details = document.getElementById('client-details');
+
+    box.style.display = 'block';
+    box.className = 'result ' + type;
+    document.getElementById('result-title').innerText = title;
+    document.getElementById('res-reason').innerText = data.reason || '';
+
+    if (type === 'success') {
+      details.style.display = 'block';
+      document.getElementById('res-name').innerText = data.client_name;
+      document.getElementById('res-plan').innerText = data.plan;
+      document.getElementById('res-expires').innerText = data.expires;
+      const photo = document.getElementById('res-photo');
+      if (data.photo_url) {
+        photo.src = data.photo_url; photo.style.display = 'block';
+      } else {
+        photo.style.display = 'none';
+      }
+      beep('success');
+    } else {
+      details.style.display = 'none';
+      document.getElementById('res-photo').style.display = 'none';
+      if (type === 'error') beep('error');
+    }
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ---------- SCAN HANDLER ---------- */
+  async function onScanSuccess(decodedText) {
+    try { html5QrcodeScanner.clear(); } catch (e) {}
+
+    if (!navigator.onLine) {
+      enqueueScan(decodedText);
+      showResult('pending', '⏳ OFFLINE — NOT VERIFIED', {
+        reason: 'Scan saved to the queue. Do NOT grant access. Re-scan when online.'
+      });
+      return;
+    }
+
+    showResult('pending', '⏳ Verifying...', {});
+
+    try {
+      const response = await fetch('/api/scan/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ qr_data: decodedText })
+      });
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        showResult('success', '✅ ACCESS GRANTED', data);
+      } else {
+        showResult('error', '❌ ACCESS DENIED', data);
+      }
+    } catch (e) {
+      enqueueScan(decodedText);
+      showResult('pending', '⏳ CONNECTION LOST — NOT VERIFIED', {
+        reason: 'Scan queued locally. Do NOT grant access until it is verified.'
+      });
+    }
+  }
+
+  function resetScanner() {
+    document.getElementById('result-box').style.display = 'none';
+    html5QrcodeScanner.render(onScanSuccess, () => {});
+  }
+
+  /* ---------- KEYBOARD SHORTCUTS ---------- */
+  document.addEventListener('keydown', (e) => {
+    // Ignore if user is typing in an input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    switch(e.key.toLowerCase()) {
+      case 'escape':
+        resetScanner();
+        showToast('Scanner reset', 'info', 1500);
+        break;
+      case 't':
+        toggleTheme();
+        showToast('Theme switched', 'info', 1500);
+        break;
+      case 'm':
+        toggleSound();
+        showToast(soundEnabled ? 'Sound ON' : 'Sound OFF', 'info', 1500);
+        break;
+      case 's':
+        if (getQueue().length > 0) {
+          syncQueue();
+          showToast('Syncing offline queue...', 'info', 1500);
+        }
+        break;
+    }
+  });
+
+  /* ---------- INIT ---------- */
+  document.addEventListener('DOMContentLoaded', function () {
+    updateQueueCount();
+    updateConnection();
+
+    html5QrcodeScanner = new Html5QrcodeScanner(
+      'reader',
+      { fps: 10, qrbox: { width: 250, height: 250 }, facingMode: 'environment' },
+      false
+    );
+    html5QrcodeScanner.render(onScanSuccess, () => {});
+
+    // Show keyboard shortcuts hint on load
+    setTimeout(() => {
+      showToast('Shortcuts: ESC=Reset, T=Theme, M=Mute, S=Sync', 'info', 5000);
+    }, 1000);
+  });
+</script>
+{% endblock %}

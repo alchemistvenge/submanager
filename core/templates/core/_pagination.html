@@ -1,0 +1,38 @@
+{% if paginator.num_pages > 1 %}
+<div class="pagination">
+  {% if page.has_previous %}
+    <a href="?{% if query %}q={{ query }}&{% endif %}{% if status_filter and status_filter != 'all' %}status={{ status_filter }}&{% endif %}page=1">« First</a>
+    <a href="?{% if query %}q={{ query }}&{% endif %}{% if status_filter and status_filter != 'all' %}status={{ status_filter }}&{% endif %}page={{ page.previous_page_number }}">‹ Prev</a>
+  {% else %}
+    <span class="disabled">« First</span>
+    <span class="disabled">‹ Prev</span>
+  {% endif %}
+  
+  {% if page_range.0 > 1 %}
+    <span class="disabled">…</span>
+  {% endif %}
+  
+  {% for num in page_range %}
+    {% if num == page.number %}
+      <span class="current">{{ num }}</span>
+    {% else %}
+      <a href="?{% if query %}q={{ query }}&{% endif %}{% if status_filter and status_filter != 'all' %}status={{ status_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+  
+  {% if page_range|last < paginator.num_pages %}
+    <span class="disabled">…</span>
+  {% endif %}
+  
+  {% if page.has_next %}
+    <a href="?{% if query %}q={{ query }}&{% endif %}{% if status_filter and status_filter != 'all' %}status={{ status_filter }}&{% endif %}page={{ page.next_page_number }}">Next ›</a>
+    <a href="?{% if query %}q={{ query }}&{% endif %}{% if status_filter and status_filter != 'all' %}status={{ status_filter }}&{% endif %}page={{ paginator.num_pages }}">Last »</a>
+  {% else %}
+    <span class="disabled">Next ›</span>
+    <span class="disabled">Last »</span>
+  {% endif %}
+</div>
+<p style="text-align:center;color:#6b7280;font-size:13px;margin:0;">
+  Showing {{ page.start_index }}–{{ page.end_index }} of {{ total_count }}
+</p>
+{% endif %}

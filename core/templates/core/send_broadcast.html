@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Send Broadcast{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+  <h1>📢 Send Broadcast Announcement</h1>
+  <p style="color: #6b7280;">This message will be sent to <strong>all staff members</strong>.</p>
+  
+  <form method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    
+    <div style="margin-bottom: 16px;">
+      <label for="priority">Priority</label>
+      <select id="priority" name="priority" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+        {% for code, label in priority_choices %}
+          <option value="{{ code }}" {% if code == 'NORMAL' %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <label for="subject">Subject</label>
+      <input type="text" id="subject" name="subject" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <label for="content">Message <small style="color: #6b7280;">(Use @username to mention someone)</small></label>
+      <textarea id="content" name="content" rows="8" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+    </div>
+    
+    <div style="display: flex; gap: 12px;">
+      <button type="submit" style="flex: 1; background: #8b5cf6;">📢 Send to All Staff</button>
+      <a href="{% url 'message_inbox' %}" style="flex: 1; text-align: center; background: #e5e7eb; color: #374151; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

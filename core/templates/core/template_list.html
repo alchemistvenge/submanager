@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Message Templates{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1 style="margin: 0;">📋 Message Templates</h1>
+    <a href="{% url 'template_create' %}" style="background: #16a34a; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;">+ New Template</a>
+  </div>
+  
+  {% if templates %}
+    {% regroup templates by get_category_display as categories %}
+    {% for category in categories %}
+    <div class="card">
+      <h2 style="margin-top: 0;">{{ category.grouper }}</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #e5e7eb;">
+            <th style="text-align: left; padding: 10px;">Name</th>
+            <th style="text-align: left; padding: 10px;">Subject</th>
+            <th style="text-align: left; padding: 10px;">Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for template in category.list %}
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 10px;"><strong>{{ template.name }}</strong></td>
+            <td style="padding: 10px; color: #6b7280;">{{ template.subject_template }}</td>
+            <td style="padding: 10px;">{{ template.get_default_priority_display }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card" style="text-align: center; padding: 40px; color: #9ca3af;">
+      <div style="font-size: 48px; margin-bottom: 12px;">📋</div>
+      <div style="font-size: 18px; font-weight: 600; color: #6b7280;">No templates yet</div>
+      <p>Create templates to speed up common messages.</p>
+    </div>
+  {% endif %}
+  
+  <p><a href="{% url 'message_inbox' %}" style="color: #6b7280;">← Back to Messages</a></p>
+</div>
+{% endblock %}

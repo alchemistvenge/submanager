@@ -1,0 +1,45 @@
+{% extends "core/emails/base_email.html" %}
+
+{% block title %}Welcome to SubManager{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ client.full_name }}! 👋</h2>
+
+<p>Thank you for subscribing to SubManager. Your account is now active and you're all set to use our equipment.</p>
+
+<div class="success-box">
+  <strong>✅ Subscription Activated</strong><br>
+  <strong>Plan:</strong> {{ subscription.get_plan_type_display }}<br>
+  <strong>Start Date:</strong> {{ subscription.start_date|date:"M d, Y" }}<br>
+  <strong>Expires:</strong> {{ subscription.expiry_date|date:"M d, Y" }} at 11:59 PM<br>
+  <strong>Amount Paid:</strong> ${{ subscription.amount_paid|floatformat:2 }}
+</div>
+
+<h2>Your Access QR Code 🎟️</h2>
+<p>Show this QR code to security when you arrive. It's valid for 24 hours.</p>
+
+<div class="qr-container">
+  <img src="{{ qr_url }}" alt="Your QR Code">
+  <p class="qr-caption">
+    Valid until: {{ access_pass.expires_at|date:"M d, Y H:i" }}
+  </p>
+</div>
+
+<p><strong>📎 The QR code is also attached to this email</strong> for easy access on your phone.</p>
+
+<div class="info-box">
+  <strong>💡 Pro Tip:</strong> Bookmark your personal portal to check your subscription status anytime:
+</div>
+
+<div class="btn-center">
+  <a href="{{ portal_url }}" class="btn">Visit My Portal</a>
+</div>
+
+<div class="warning-box">
+  <strong>⚠️ Important:</strong> Your QR code expires every 24 hours for security. When you need a fresh code, just log into your portal or reply to this email.
+</div>
+
+<p>If you have any questions, don't hesitate to reach out to our team.</p>
+
+<p>Best regards,<br><strong>The SubManager Team</strong></p>
+{% endblock %}

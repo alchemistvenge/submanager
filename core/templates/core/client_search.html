@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Search Clients{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 1000px; margin: 0 auto;">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <h1 style="margin:0;">🔍 Clients</h1>
+    {% if user.is_owner %}
+    <a href="{% url 'export_clients_csv' %}" style="background: #10b981; color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600;">
+      📥 Export CSV
+    </a>
+    {% endif %}
+  </div>
+  
+  <form method="get" style="margin: 20px 0; display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name, WhatsApp, or email..." style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    
+    <select name="status" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+      <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+    </select>
+    
+    <select name="plan" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      <option value="all" {% if plan_filter == 'all' %}selected{% endif %}>All Plans</option>
+      <option value="DAILY" {% if plan_filter == 'DAILY' %}selected{% endif %}>Daily</option>
+      <option value="WEEKLY" {% if plan_filter == 'WEEKLY' %}selected{%

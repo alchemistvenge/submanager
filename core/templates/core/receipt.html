@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt - {{ subscription.client.full_name }}</title>
+  <style>
+    @media print {
+      body { margin: 0; }
+      .no-print { display: none; }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .receipt {
+      max-width: 400px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 30px;
+      border: 2px dashed #333;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px dashed #333;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .header p {
+      font-size: 12px;
+      color: #666;
+    }
+    .details {
+      margin-bottom: 20px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dotted #ccc;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .label {
+      font-weight: bold;
+    }
+    .total {
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      margin: 20px 0;
+      padding: 15px;
+      background: #f0f0f0;
+      border: 2px solid #333;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px dashed #333;
+      font-size: 12px;
+      color: #666;
+    }
+    .print-btn {
+      display: block;
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 12px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .print-btn:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="header">
+      <h1>RECEIPT</h1>
+      <p>SubManager</p>
+      <p>{{ subscription.start_date|date:"M d, Y H:i" }}</p>
+    </div>
+    
+    <div class="details">
+      <div class="detail-row">
+        <span class="label">Client:</span>
+        <span>{{ subscription.client.full_name }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">WhatsApp:</span>
+        <span>{{ subscription.client.whatsapp_number }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Plan:</span>
+        <span>{{ subscription.get_plan_type_display }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Start Date:</span>
+        <span>{{ subscription.start_date|date:"M d, Y" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Expiry Date:</span>
+        <span>{{ subscription.expiry_date|date:"M d, Y" }}</span>
+      </div>
+    </div>
+    
+    <div class="total">
+      TOTAL PAID: ${{ subscription.amount_paid|floatformat:2 }}
+    </div>
+    
+    <div class="footer">
+      <p>Thank you for your business!</p>
+      <p>Receipt #{{ subscription.id }}</p>
+      <p style="margin-top: 10px;">

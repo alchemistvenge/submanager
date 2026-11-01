@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Create Template{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+  <h1>📋 Create Message Template</h1>
+  
+  <form method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    
+    <div style="margin-bottom: 16px;">
+      <label for="name">Template Name</label>
+      <input type="text" id="name" name="name" required placeholder="e.g. Equipment Malfunction Report" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+      <div>
+        <label for="category">Category</label>
+        <select id="category" name="category" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+          {% for code, label in categories %}
+            <option value="{{ code }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="default_priority">Default Priority</label>
+        <select id="default_priority" name="default_priority" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+          {% for code, label in priority_choices %}
+            <option value="{{ code }}" {% if code == 'NORMAL' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <label for="subject_template">Subject Template</label>
+      <input type="text" id="subject_template" name="subject_template" required placeholder="e.g. Equipment Issue: [Equipment Name]" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <label for="content_template">Content Template</label>
+      <textarea id="content_template" name="content_template" rows="8" required placeholder="Write the message template here..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+      <small style="color: #6b7280;">Users will fill in the details when using this template</small>
+    </div>
+    
+    <div style="display: flex; gap: 12px;">
+      <button type="submit" style="flex: 1;">Create Template</button>
+      <a href="{% url 'template_list' %}" style="flex: 1; text-align: center; background: #e5e7eb; color: #374151; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

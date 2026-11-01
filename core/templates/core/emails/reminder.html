@@ -1,0 +1,43 @@
+{% extends "core/emails/base_email.html" %}
+
+{% block title %}Subscription Reminder{% endblock %}
+
+{% block content %}
+<h2>Subscription Reminder ⏰</h2>
+
+<p>Hi {{ client.full_name }},</p>
+
+{% if urgency == 'urgent' %}
+<div class="urgent-box">
+  <strong>⚠️ URGENT: Your subscription expires TOMORROW!</strong><br>
+  Without renewal, you won't be able to access the facility after 11:59 PM tonight.
+</div>
+{% elif urgency == 'warning' %}
+<div class="warning-box">
+  <strong>⏰ Heads up:</strong> Your subscription expires in <strong>{{ days_until_expiry }} days</strong>.
+</div>
+{% else %}
+<div class="info-box">
+  <strong>📅 Reminder:</strong> Your subscription expires in <strong>{{ days_until_expiry }} days</strong>.
+</div>
+{% endif %}
+
+<div class="info-box">
+  <strong>Current Plan:</strong> {{ subscription.get_plan_type_display }}<br>
+  <strong>Expires:</strong> {{ subscription.expiry_date|date:"M d, Y" }} at 11:59 PM
+</div>
+
+<p>To avoid any interruption to your access, please renew your subscription before it expires.</p>
+
+<div class="btn-center">
+  <a href="{{ portal_url }}" class="btn {% if urgency == 'urgent' %}btn-warning{% endif %}">
+    {% if urgency == 'urgent' %}Renew Now{% else %}View My Subscription{% endif %}
+  </a>
+</div>
+
+<p>You can also visit the front desk to renew in person.</p>
+
+<p>Thank you for being a valued member!</p>
+
+<p>Best regards,<br><strong>The SubManager Team</strong></p>
+{% endblock %}

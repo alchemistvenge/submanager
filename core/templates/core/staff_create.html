@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Add Staff Member{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+  <h1>➕ Add New Staff Member</h1>
+  
+  {% if messages %}
+    {% for message in messages %}
+      <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 16px;">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" style="margin-top: 24px;">
+    {% csrf_token %}
+    
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; margin-bottom: 6px; font-weight: 600;">Username</label>
+      <input type="text" name="username" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; margin-bottom: 6px; font-weight: 600;">Password</label>
+      <input type="password" name="password" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; margin-bottom: 6px; font-weight: 600;">Role</label>
+      <select name="role" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+        <option value="MANAGER">Manager (No Financials)</option>
+        <option value="RECEPTIONIST">Receptionist (Register Only)</option>
+        <option value="SECURITY">Security Guard (Scan Only)</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; margin-bottom: 6px; font-weight: 600;">Phone Number (Optional)</label>
+      <input type="text" name="phone_number" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" name="can_view_all_clients" style="width: auto;">
+        <span>Allow this staff member to view all client details</span>
+      </label>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+      <button type="submit" style="flex: 1; background: #16a34a; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer;">Create Staff Member</button>
+      <a href="{% url 'staff_management' %}" style="flex: 1; text-align: center; background: #e5e7eb; color: #374151; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

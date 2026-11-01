@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Revenue Report{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+  <h1>📈 Custom Revenue Report</h1>
+  
+  <form method="post" style="margin: 24px 0;">
+    {% csrf_token %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end;">
+      <div>
+        <label for="start_date">Start Date</label>
+        <input type="date" id="start_date" name="start_date" required>
+      </div>
+      <div>
+        <label for="end_date">End Date</label>
+        <input type="date" id="end_date" name="end_date" required>
+      </div>
+      <button type="submit">Generate Report</button>
+    </div>
+  </form>
+  
+  {% if has_results %}
+    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 24px 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="margin: 0;">Report: {{ start_date }} to {{ end_date }}</h2>
+        <a href="{% url 'export_revenue_csv' %}?start={{ start_date }}&end={{ end_date }}" style="background: #10b981; color: #fff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600;">
+          📥 Export CSV
+        </a>
+      </div>
+      
+      <p style="font-size: 36px; font-weight: 700; color: #10b981; margin: 16px 0;">
+        Total Revenue: ${{ total_revenue|floatformat:2 }}
+      </p>
+      
+      <h3>Breakdown by Plan</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+        <thead>
+          <tr style="border-bottom: 2px solid #e5e7eb;">
+            <th style="text-align: left; padding: 8px;">Plan</th>
+            <th style="text-align: right; padding: 8px;">Count</th>
+            <th style="text-align: right; padding: 8px;">Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in breakdown %}
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 8px;">{{ item.plan_type }}</td>
+            <td style="text-align: right; padding: 8px;">{{ item.count }}</td>
+            <td style="text-align: right; padding: 8px; font-weight: 600;">${{ item.total|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      <h3 style="margin-top: 32px;">All Transactions</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px;">
+        <thead>
+          <tr style="border-bottom: 2px solid #e5e7eb;">
+            <th style="text-align: left; padding: 8px;">Date</th>
+            <th style="text-align: left; padding: 8px;">Client</th>
+            <th style="text-align: left; padding: 8px;">Plan</th>
+            <th style="text-align: right; padding: 8px;">Amount</th>
+            <th style="text-align: right; padding: 8px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub in subscriptions %}
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 8px;">{{ sub.start_date|date:"M d, Y" }}</td>
+            <td style="padding: 8px;">{{ sub.client.full_name }}</td>
+            <td style="padding: 8px;">{{ sub.get_plan_type_display }}</td>
+            <td style="text-align: right; padding: 8px; font-weight: 600;">${{ sub.amount_paid|floatformat:2 }}</td>
+            <td style="text-align: right; padding: 8px;">
+              <a href="{% url 'print_receipt' sub.id %}" target="_blank" style="color: #3b82f6; text-decoration: none; font-size: 12px;">🖨️ Receipt</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+  
+  <p><a href="{% url 'staff_dashboard' %}">← Back to Dashboard</a></p>
+</div>
+{% endblock %}

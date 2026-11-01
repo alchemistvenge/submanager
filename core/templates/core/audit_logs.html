@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 1100px; margin: 0 auto;">
+  <h1 style="margin-top:0;">🛡️ Staff Audit Logs</h1>
+  <p style="color: #6b7280; margin-bottom: 20px;">Track every action performed by staff members.</p>
+  
+  <!-- Filters -->
+  <form method="get" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 20px;">
+    <select name="action" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      <option value="all" {% if action_filter == 'all' %}selected{% endif %}>All Actions</option>
+      {% for code, label in actions %}
+        <option value="{{ code }}" {% if action_filter == code %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    
+    <select name="user" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      <option value="all" {% if user_filter == 'all' %}selected{% endif %}>All Staff</option>
+      {% for u in users %}
+        <option value="{{ u.id }}" {% if user_filter == u.id|stringformat:"d" %}selected{% endif %}>{{ u.username }}</option>
+      {% endfor %}
+    </select>
+    
+    <button type="submit" style="padding: 10px 20px;">Filter</button>
+  </form>
+  
+  {% if page.object_list %}
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 12px;">Timestamp</th>
+          <th style="text-align: left; padding: 12px;">Staff</th>
+          <th style="text-align: left; padding: 12px;">Action</th>
+          <th style="text-align: left; padding: 12px;">Client</th>
+          <th style="text-align: left; padding: 12px;">Details</th>
+          <th style="text-align: left; padding: 12px;">IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in page.object_list %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 12px; font-size: 13px; color: #6b7280; white-space: nowrap;">{{ log.timestamp|date:"M d, H:i" }}</td>
+          <td style="padding: 12px;">
+            <strong>{{ log.user.username }}</strong>
+            <br><small style="color: #9ca3af;">{{ log.user.get_role_display }}</small>
+          </td>
+          <td style="padding: 12px;">
+            <span style="background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+              {{ log.get_action_display }}
+            </span>
+          </td>
+          <td style="padding: 12px;">{{ log.client.full_name|default:"—" }}</td>
+          <td style="padding: 12px; font-size: 13px; color: #6b7280;">{{ log.details|default:"—" }}</td>
+          <td style="padding: 12px; font-size: 12px; color: #9ca3af; font-family: monospace;">{{ log.ip_address|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  {% include "core/_pagination.html" %}
+  
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🛡️</div>
+    <div class="empty-state-title">No audit logs yet</div>
+    <p class="empty-state-text">Actions performed by staff will appear here.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

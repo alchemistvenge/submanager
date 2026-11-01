@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SubManager{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto;">
+  
+  <!-- Welcome Message -->
+  <div style="margin-bottom: 32px;">
+    <h1 style="margin: 0;">Welcome, {{ user.username }} 👋</h1>
+    <p style="color: #6b7280; margin-top: 4px;">Role: <strong>{{ user.get_role_display }}</strong></p>
+  </div>
+
+  <!-- Financial Metrics (ONLY FOR OWNER) -->
+  {% if user.can_see_financials %}
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 32px;">
+    <div class="card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff;">
+      <h3 style="margin: 0; font-size: 14px; opacity: 0.9;">Today's Revenue</h3>
+      <p style="margin: 8px 0 0 0; font-size: 32px; font-weight: 700;">${{ today_revenue|floatformat:2 }}</p>
+    </div>
+    <div class="card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #fff;">
+      <h3 style="margin: 0; font-size: 14px; opacity: 0.9;">This Week</h3>
+      <p style="margin: 8px 0 0 0; font-size: 32px; font-weight: 700;">${{ week_revenue|floatformat:2 }}</p>
+    </div>
+    <div class="card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: #fff;">
+      <h3 style="margin: 0; font-size: 14px; opacity: 0.9;">This Month</h3>
+      <p style="margin: 8px 0 0 0; font-size: 32px; font-weight: 700;">${{ month_revenue|floatformat:2 }}</p>
+    </div>
+  </div>
+  {% endif %}
+  
+  <!-- Customer Metrics (For Managers & Owners) -->
+  {% if user.can_view_all_clients or user.is_owner or user.is_manager %}
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px;">
+    <div class="card">
+      <h3 style="margin: 0; color: #6b7280; font-size: 14px;">Total Customers</h3>
+      <p style="margin: 8px 0 0 0; font-size: 36px; font-weight: 700; color: #1f2937;">{{ total_customers }}</p>
+    </div>
+    <div class="card" style="border-left: 4px solid #10b981;">
+      <h3 style="margin: 0; color: #10b981; font-size: 14px;">Active Customers</h3>
+      <p style="margin: 8px 0 0 0; font-size: 36px; font-weight: 700; color: #10b981;">{{ active_customers }}</p>
+    </div>
+  </div>
+  {% endif %}
+  
+  <!-- Quick Actions -->
+  <h2 style="margin-bottom: 16px;">Quick Actions</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+    
+    {% if user.can_register_clients %}
+    <a href="{% url 'register' %}" class="card" style="text-decoration: none; text-align: center; transition: transform 0.2s; border: 2px solid #e5e7eb;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <p style="font-size: 32px; margin: 0;">➕</p>
+      <p style="margin: 8px 0 0 0; font-weight: 600;">Register Client</p>
+    </a>
+    {% endif %}
+    
+    {% if user.can_scan_qr %}
+    <a href="{% url 'scanner_view' %}" class="card" style="text-decoration: none; text-align: center; transition: transform 0.2s; border: 2px solid #e5e7eb;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <p style="font-size: 32px; margin: 0;">📷</p>
+      <p style="margin: 8px 0 0 0; font-weight: 600;">Open Scanner</p>
+    </a>
+    {% endif %}
+    
+    <a href="{% url 'client_search' %}" class="card" style="text-decoration: none; text-align: center; transition: transform 0.2s; border: 2px solid #e5e7eb;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <p style="font-size: 32px; margin: 0;">🔍</p>
+      <p style="margin: 8px 0 0 0; font-weight: 600;">Search Clients</p>
+    </a>
+    
+    {% if user.is_owner %}
+    <a href="{% url 'revenue_report' %}" class="card" style="text-decoration: none; text-align: center; transition: transform 0.2s; border: 2px solid #e5e7eb;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <p style="font-size: 32px; margin: 0;">📈</p>
+      <p style="margin: 8px 0 0 0; font-weight: 600;">Revenue Report</p>
+    </a>
+    
+    <a href="{% url 'audit_logs' %}" class="card" style="text-decoration: none; text-align: center; transition: transform 0.2s; border: 2px solid #e5e7eb;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <p style="font-size: 32px; margin: 0;">🛡️</p>
+      <p style="margin: 8px 0 0 0; font-weight: 600;">Audit Logs</p>
+    </a>
+    
+    <a href="{% url 'staff_management' %}" class="card" style="text-decoration: none; text-align: center; transition: transform 0.2s; border: 2px solid #e5e7eb;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <p style="font-size: 32px; margin: 0;">👥</p>
+      <p style="margin: 8px 0 0 0; font-weight: 600;">Manage Staff</p>
+    </a>
+    {% endif %}
+    
+  </div>
+  
+  <!-- Recent Activity -->
+  <div class="card">
+    <h2 style="margin-top: 0;">🕐 Recent Registrations</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 8px;">Client</th>
+          <th style="text-align: left; padding: 8px;">Plan</th>
+          {% if user.can_see_financials %}
+          <th style="text-align: right; padding: 8px;">Amount</th>
+          {% endif %}
+          <th style="text-align: right; padding: 8px;">Expires</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in recent_registrations %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 8px;">
+            <strong>{{ sub.client.full_name }}</strong><br>
+            <small style="color: #6b7280;">{{ sub.client.whatsapp_number }}</small>
+          </td>
+          <td style="padding: 8px;">{{ sub.get_plan_type_display }}</td>
+          {% if user.can_see_financials %}
+          <td style="text-align: right; padding: 8px; font-weight: 600;">${{ sub.amount_paid|floatformat:2 }}</td>
+          {% endif %}
+          <td style="text-align: right; padding: 8px; font-size: 13px;">{{ sub.expiry_date|date:"M d, H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" style="padding: 16px; text-align: center; color: #9ca3af;">No registrations yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+</div>
+{% endblock %}

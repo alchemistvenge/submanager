@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Shift Note - {{ note.shift_date }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+  <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 20px;">
+    <h1 style="margin: 0 0 8px 0;">{{ note.get_shift_display }} — {{ note.shift_date|date:"M d, Y" }}</h1>
+    <div style="color: #6b7280; font-size: 14px;">
+      By <strong>{{ note.author.username }}</strong> | Logged at {{ note.created_at|date:"M d, Y H:i" }}
+    </div>
+  </div>
+  
+  <div style="margin-bottom: 24px;">
+    <h3 style="color: #374151;">📝 Shift Notes</h3>
+    <div style="background: #f9fafb; padding: 16px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap;">{{ note.notes }}</div>
+  </div>
+  
+  {% if note.incidents %}
+  <div style="margin-bottom: 24px;">
+    <h3 style="color: #ef4444;">⚠️ Incidents / Issues</h3>
+    <div style="background: #fee2e2; padding: 16px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap; color: #991b1b;">{{ note.incidents }}</div>
+  </div>
+  {% endif %}
+  
+  {% if note.handover_notes %}
+  <div style="margin-bottom: 24px;">
+    <h3 style="color: #3b82f6;">🔄 Handover Notes</h3>
+    <div style="background: #dbeafe; padding: 16px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap; color: #1e40af;">{{ note.handover_notes }}</div>
+  </div>
+  {% endif %}
+  
+  <p><a href="{% url 'shift_notes_list' %}" style="color: #6b7280;">← Back to Shift Notes</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Forward Message{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+  <h1>↗️ Forward Message</h1>
+  
+  <div style="background: #f9fafb; padding: 16px; border-radius: 6px; margin-bottom: 20px; border-left: 3px solid #3b82f6;">
+    <div style="font-size: 13px; color: #6b7280; margin-bottom: 6px;">
+      <strong>Original from:</strong> {{ original.sender.username }} | {{ original.created_at|date:"M d, Y H:i" }}
+    </div>
+    <div style="font-weight: 600; margin-bottom: 8px;">{{ original.subject }}</div>
+    <div style="font-size: 14px; color: #4b5563; white-space: pre-wrap;">{{ original.content|truncatechars:300 }}</div>
+  </div>
+  
+  <form method="post">
+    {% csrf_token %}
+    
+    <div style="margin-bottom: 16px;">
+      <label for="recipient_id">Forward to</label>
+      <select id="recipient_id" name="recipient_id" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+        <option value="">Select recipient...</option>
+        {% for recipient in recipients %}
+          <option value="{{ recipient.id }}">{{ recipient.username }} ({{ recipient.get_role_display }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <label for="forward_content">Additional message (optional)</label>
+      <textarea id="forward_content" name="forward_content" rows="4" placeholder="Add a note..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+    </div>
+    
+    <div style="display: flex; gap: 12px;">
+      <button type="submit" style="flex: 1;">Forward Message</button>
+      <a href="{% url 'view_message' original.id %}" style="flex: 1; text-align: center; background: #e5e7eb; color: #374151; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

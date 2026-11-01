@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Registration Complete{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+  <h1>✅ Subscription Active</h1>
+
+  {% if subscription.client.profile_photo %}
+    <img class="pass-photo"
+         src="{{ subscription.client.profile_photo.url }}"
+         alt="{{ subscription.client.full_name }}">
+  {% endif %}
+
+  <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <p><strong>Name:</strong> {{ subscription.client.full_name }}</p>
+    <p><strong>WhatsApp:</strong> {{ subscription.client.whatsapp_number }}</p>
+    {% if subscription.client.email %}
+    <p><strong>Email:</strong> {{ subscription.client.email }}</p>
+    {% endif %}
+    <p><strong>Plan:</strong> {{ subscription.get_plan_type_display }}</p>
+    <p><strong>Amount paid:</strong> ${{ subscription.amount_paid|floatformat:2 }}</p>
+    <p>
+      <strong>Expires:</strong>
+      {{ subscription.expiry_date|date:"D, d M Y" }}
+      at {{ subscription.expiry_date|time:"H:i" }}
+    </p>
+  </div>
+
+  {% if subscription.client.email and latest_pass %}
+  <div style="background: #dcfce7; border-left: 4px solid #16a34a; padding: 16px; border-radius: 6px; margin: 20px 0;">
+    <h3 style="margin: 0 0 8px 0; color: #166534;">📧 Email Sent Successfully!</h3>
+    <p style="margin: 0; color: #166534;">
+      A welcome email with the QR code has been sent to <strong>{{ subscription.client.email }}</strong>.
+      The client can also access their portal at any time to view their subscription status.
+    </p>
+  </div>
+  {% elif not subscription.client.email %}
+  <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 6px; margin: 20px 0;">
+    <h3 style="margin: 0 0 8px 0; color: #92400e;">⚠️ No Email on File</h3>
+    <p style="margin: 0; color: #92400e;">
+      This client doesn't have an email address. They won't receive QR codes or reminders automatically.
+      Consider adding their email in the admin panel.
+    </p>
+  </div>
+  {% endif %}
+
+  <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e5e7eb;">
+
+  <h2>🎟️ QR Code Preview</h2>
+  {% if latest_pass %}
+  <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+    <img src="/media/qrcodes/pass_{{ latest_pass.id }}.png" 
+         alt="Dynamic QR Code" 
+         style="max-width: 250px; border: 1px solid #d1d5db; border-radius: 8px;">
+    <p style="margin-top: 12px; font-size: 12px; color: #ef4444;">
+      ⚠️ This QR code expires in 24 hours ({{ latest_pass.expires_at|date:"M d, Y H:i" }})
+    </p>
+  </div>
+  {% endif %}
+
+  <div style="margin-top: 24px; display: flex; gap: 12px;">
+    <a href="{% url 'register' %}" style="flex: 1; text-align: center; background: #16a34a; color: #fff; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">Register Another Client</a>
+    <a href="{% url 'client_detail' subscription.client.id %}" style="flex: 1; text-align: center; background: #3b82f6; color: #fff; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">View Client Profile</a>
+  </div>
+</div>
+{% endblock %}

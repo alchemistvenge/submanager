@@ -1,0 +1,25 @@
+{% extends "core/emails/base_email.html" %}
+
+{% block title %}Verification Code{% endblock %}
+
+{% block content %}
+<h2>Your Verification Code 🔐</h2>
+
+<p>Hi {{ client.full_name }},</p>
+
+<p>You requested access to your SubManager portal. Use the code below to verify your identity:</p>
+
+<div class="pin-box">
+  <p style="margin: 0; color: #6b7280; font-size: 13px;">Your verification code:</p>
+  <div class="pin-code">{{ pin_code }}</div>
+  <p style="margin: 0; color: #6b7280; font-size: 13px;">This code expires in 10 minutes</p>
+</div>
+
+<div class="warning-box">
+  <strong>⚠️ Security Notice:</strong> If you didn't request this code, please ignore this email. Never share this code with anyone.
+</div>
+
+<p>If you have trouble logging in, contact our support team.</p>
+
+<p>Best regards,<br><strong>The SubManager Team</strong></p>
+{% endblock %}

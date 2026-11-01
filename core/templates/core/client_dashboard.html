@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard - SubManager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      background: #f4f6f8;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 32px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .header h1 {
+      margin-bottom: 8px;
+    }
+    .header p {
+      opacity: 0.9;
+    }
+    .card {
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .status-active {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-expired {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .qr-section {
+      text-align: center;
+      padding: 24px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .qr-section img {
+      max-width: 250px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .info-item {
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .info-item label {
+      display: block;
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .info-item .value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .logout-btn {
+      display: block;
+      text-align: center;
+      margin-top: 24px;
+      padding: 12px;
+      background: #ef4444;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Welcome, {{ client.full_name }} 👋</h1>
+      <p>{{ client.whatsapp_number }}</p>
+    </div>
+    
+    {% if current_subscription %}
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">Current Subscription</h2>
+      
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Status</label>
+          <div class="value">
+            <span class="status-badge status-active">✅ Active</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <label>Plan</label>
+          <div class="value">{{ current_subscription.get_plan_type_display }}</div>
+        </div>
+        <div class="info-item">
+          <label>Expires</label>
+          <div class="value">{{ current_subscription.expiry_date|date:"M d, Y" }}</div>
+        </div>
+      </div>
+      
+      {% if latest_pass %}
+      <div class="qr-section">
+        <h3 style="margin-bottom: 12px;">Your Access QR Code</h3>
+        <img src="/media/qrcodes/pass_{{ latest_pass.id }}.png" alt="Your QR Code">
+        <p style="margin-top: 12px; color: #6b7280; font-size: 14px;">
+          Show this to security when you arrive
+        </p>
+        <p style="margin-top: 8px; color: #ef4444; font-size: 12px;">
+          ⚠️ This QR code expires on {{ latest_pass.expires_at|date:"M d, Y H:i" }}
+        </p>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">Subscription Status</h2>
+      <div style="text-align: center; padding: 32px;">
+        <span class="status-badge status-expired">❌ No Active Subscription</span>
+        <p style="margin-top: 16px; color: #6b7280;">
+          Please contact us to renew your subscription.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+    
+    <div class="card">
+      <h2 style="margin-bottom: 16px;">Subscription History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Plan</th>
+            <th>Start Date</th>
+            <th>Expiry Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub in subscriptions %}
+          <tr>
+            <td>{{ sub.get_plan_type_display }}</td>
+            <td>{{ sub.start_date|date:"M d, Y" }}</td>
+            <td>{{ sub.expiry_date|date:"M d, Y" }}</td>
+            <td>
+              {% if sub.is_active %}
+                <span style="color: #16a34a;">Active</span>
+              {% else %}
+                <span style="color: #ef4444;">Expired</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <a href="{% url 'client_portal_logout' %}" class="logout-btn">Logout</a>
+  </div>
+</body>
+</html>

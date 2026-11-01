@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Send Message{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+  <h1>✉️ Send Message</h1>
+  
+  {% if client %}
+  <div style="background: #eff6ff; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+    <strong>About client:</strong> {{ client.full_name }} ({{ client.whatsapp_number }})
+  </div>
+  {% endif %}
+  
+  <form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+    {% csrf_token %}
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+      <div>
+        <label for="recipient_id">Recipient</label>
+        <select id="recipient_id" name="recipient_id" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="">Select recipient...</option>
+          {% for recipient in recipients %}
+            <option value="{{ recipient.id }}">{{ recipient.username }} ({{ recipient.get_role_display }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div>
+        <label for="message_type">Type</label>
+        <select id="message_type" name="message_type" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+          {% for code, label in message_types %}
+            <option value="{{ code }}" {% if code == 'GENERAL' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+      <div>
+        <label for="priority">Priority</label>
+        <select id="priority" name="priority" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+          {% for code, label in priority_choices %}
+            <option value="{{ code }}" {% if code == 'NORMAL' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div>
+        <label for="due_date">Due Date (Optional)</label>
+        <input type="datetime-local" id="due_date" name="due_date" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" name="is_broadcast" style="width: auto;">
+        <span>Send as broadcast to all staff (Owner/Manager only)</span>
+      </label>
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <label for="template_id">Use Template (Optional)</label>
+      <select id="template_id" name="template_id" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;" onchange="loadTemplate(this.value)">
+        <option value="">-- No template --</option>
+        {% for template in templates %}
+          <option value="{{ template.id }}" data-subject="{{ template.subject_template }}" data-content="{{ template.content_template }}" data-priority="{{ template.default_priority }}">
+            {{ template.name }} ({{ template.get_category_display }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    {% if client %}
+    <input type="hidden" name="client_id" value="{{ client.id }}">
+    {% endif %}
+    
+    <div style="margin-bottom: 16px;">
+      <label for="subject">Subject</label>
+      <input type="text" id="subject" name="subject" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <label for="content">Message <small style="color: #6b7280;">(Use @username to mention someone)</small></label>
+      <textarea id="content" name="content" rows="8" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <label for="attachments">Attachments</label>
+      <input type="file" id="attachments" name="attachments" multiple style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      <small style="color: #6b7280;">Upload images, documents, or other files</small>
+    </div>
+    
+    <div style="display: flex; gap: 12px;">
+      <button type="submit" style="flex: 1;">Send Message</button>
+      <a href="{% url 'message_inbox' %}" style="flex: 1; text-align: center; background: #e5e7eb; color: #374151; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function loadTemplate(templateId) {
+  if (!templateId) return;
+  const select = document.getElementById('template_id');
+  const option = select.options[select.selectedIndex];
+  
+  document.getElementById('subject').value = option.dataset.subject || '';
+  document.getElementById('content').value = option.dataset.content || '';
+  document.getElementById('priority').value = option.dataset.priority || 'NORMAL';
+}
+</script>
+{% endblock %}

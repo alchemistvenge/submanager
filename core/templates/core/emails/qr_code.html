@@ -1,0 +1,27 @@
+{% extends "core/emails/base_email.html" %}
+
+{% block title %}Your Access Pass{% endblock %}
+
+{% block content %}
+<h2>Your Fresh Access Pass 🎟️</h2>
+
+<p>Hi {{ client.full_name }},</p>
+
+<p>Here's your new QR code for today. Show this to security when you arrive.</p>
+
+<div class="qr-container">
+  <img src="{{ qr_url }}" alt="Your QR Code">
+  <p class="qr-caption">
+    Valid until: {{ access_pass.expires_at|date:"M d, Y H:i" }}
+  </p>
+</div>
+
+<div class="info-box">
+  <strong>Plan:</strong> {{ subscription.get_plan_type_display }}<br>
+  <strong>Subscription Expires:</strong> {{ subscription.expiry_date|date:"M d, Y" }}
+</div>
+
+<p><strong>📎 The QR code is also attached to this email.</strong></p>
+
+<p>See you soon!</p>
+{% endblock %}

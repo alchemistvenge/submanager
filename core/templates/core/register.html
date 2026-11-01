@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Register Client{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Register a Client</h1>
+
+  <p>
+    <small>
+      Fixed prices:
+      {% for code, price in prices.items %}
+        {{ code }} = {{ price }}{% if not forloop.last %} &nbsp;·&nbsp; {% endif %}
+      {% endfor %}
+    </small>
+  </p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Register &amp; Activate</button>
+  </form>
+</div>
+{% endblock %}

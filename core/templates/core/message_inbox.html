@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+    <h1 style="margin: 0;">✉️ Messages</h1>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      {% if user.is_owner or user.is_manager %}
+        <a href="{% url 'send_broadcast' %}" style="background: #8b5cf6; color: #fff; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">📢 Broadcast</a>
+        <a href="{% url 'template_list' %}" style="background: #f59e0b; color: #fff; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">📋 Templates</a>
+        <a href="{% url 'message_analytics' %}" style="background: #3b82f6; color: #fff; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">📊 Analytics</a>
+      {% endif %}
+      <a href="{% url 'shift_notes_list' %}" style="background: #10b981; color: #fff; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">📝 Shift Notes</a>
+      <a href="{% url 'send_message' %}" style="background: #16a34a; color: #fff; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">+ New Message</a>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px;">
+    <div class="card" style="padding: 16px; text-align: center;">
+      <div style="font-size: 24px; font-weight: 700; color: #16a34a;">{{ open_issues }}</div>
+      <div style="font-size: 12px; color: #6b7280;">Open Issues</div>
+    </div>
+    <div class="card" style="padding: 16px; text-align: center;">
+      <div style="font-size: 24px; font-weight: 700; color: #ef4444;">{{ user.get_unread_message_count }}</div>
+      <div style="font-size: 12px; color: #6b7280;">Unread</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card" style="margin-bottom: 24px;">
+    <form method="get" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+      <div>
+        <label style="font-size: 12px; color: #6b7280;">Search</label>
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Search messages..." style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: #6b7280;">Status</label>
+        <select name="status" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+          {% for code, label in status_choices %}
+            <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label style="font-size: 12px; color: #6b7280;">Type</label>
+        <select name="type" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
+          {% for code, label in type_choices %}
+            <option value="{{ code }}" {% if type_filter == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label style="font-size: 12px; color: #6b7280;">Priority</label>
+        <select name="priority" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All Priorities</option>
+          {% for code, label in priority_choices %}
+            <option value="{{ code }}" {% if priority_filter == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" style="padding: 8px 16px;">Filter</button>
+    </form>
+  </div>
+
+  <!-- Received Messages -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 style="margin: 0;">📥 Received</h2>
+      <form method="post" action="{% url 'bulk_actions' id="bulk-form-received">
+        {% csrf_token %}
+        <select name="action" style="padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+          <option value="mark_read">Mark as Read</option>
+          <option value="archive">Archive</option>
+          <option value="delete">Delete</option>
+        </select>
+        <button type="submit" style="padding: 6px 12px; font-size: 13px;">Apply</button>
+      </form>
+    </div>
+
+    {% if received_messages %}
+    <form method="post" action="{% url 'bulk_actions' %}" id="bulk-form-main">
+      {% csrf_token %}
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #e5e7eb;">
+            <th style="text-align: left; padding: 8px; width: 30px;"><input type="checkbox" id="select-all"></th>
+            <th style="text-align: left; padding: 8px;">From</th>
+            <th style="text-align: left; padding: 8px;">Subject</th>
+            <th style="text-align: left; padding: 8px;">Type</th>
+            <th style="text-align: left; padding: 8px;">Priority</th>
+            <th style="text-align: left; padding: 8px;">Status</th>
+            <th style="text-align: left; padding: 8px;">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for msg in received_messages %}
+          <tr style="border-bottom: 1px solid #f3f4f6; {% if not msg.is_read %}background: #eff6ff;{% endif %} {% if msg.is_overdue %}background: #fee2e2;{% endif %} {% if msg.is_pinned %}border-left: 3px solid #f59e0b;{% endif %}">
+            <td style="padding: 8px;"><input type="checkbox" name="message_ids" value="{{ msg.id }}"></td>
+            <td style="padding: 8px;">
+              <strong>{{ msg.sender.username }}</strong>
+              {% if msg.is_broadcast %}<span style="color: #8b5cf6; font-size: 11px;">📢</span>{% endif %}
+            </td>
+            <td style="padding: 8px;">
+              <a href="{% url 'view_message' msg.id %}" style="color: #2563eb; text-decoration: none;">
+                {% if msg.is_pinned %}📌 {% endif %}
+                {{ msg.subject }}
+                {% if not msg.is_read %}<span style="background: #3b82f6; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">NEW</span>{% endif %}
+                {% if msg.reply_count > 0 %}<span style="background: #e0e7ff; color: #3730a3; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">💬 {{ msg.reply_count }}</span>{% endif %}
+                {% if msg.is_overdue %}<span style="background: #ef4444; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">OVERDUE</span>{% endif %}
+              </a>
+              {% if msg.client %}<div style="font-size: 11px; color: #9ca3af;">About: {{ msg.client.full_name }}</div>{% endif %}
+            </td>
+            <td style="padding: 8px;">
+              <span style="background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+                {{ msg.get_message_type_display }}
+              </span>
+            </td>
+            <td style="padding: 8px;">
+              {% if msg.priority == 'URGENT' %}
+                <span style="background: #ef4444; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px;">🔴 Urgent</span>
+              {% elif msg.priority == 'HIGH' %}
+                <span style="background: #f59e0b; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px;">🟠 High</span>
+              {% elif msg.priority == 'LOW' %}
+                <span style="background: #e5e7eb; color: #6b7280; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Low</span>
+              {% else %}
+                <span style="background: #e5e7eb; color: #374151; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Normal</span>
+              {% endif %}
+            </td>
+            <td style="padding: 8px;">
+              <span style="font-size: 11px;">{{ msg.get_status_display }}</span>
+            </td>
+            <td style="padding: 8px; font-size: 13px; color: #6b7280;">{{ msg.created_at|date:"M d, H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
+    {% else %}
+    <p style="color: #9ca3af; text-align: center; padding: 20px;">No messages received.</p>
+    {% endif %}
+  </div>
+
+  <!-- Sent Messages -->
+  <div class="card">
+    <h2 style="margin-top: 0;">📤 Sent</h2>
+    {% if sent_messages %}
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">To</th>
+          <th style="text-align: left; padding: 10px;">Subject</th>
+          <th style="text-align: left; padding: 10px;">Type</th>
+          <th style="text-align: left; padding: 10px;">Status</th>
+          <th style="text-align: left; padding: 10px;">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for msg in sent_messages %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 10px;">{{ msg.recipient.username|default:"All Staff" }}</td>
+          <td style="padding: 10px;">
+            <a href="{% url 'view_message' msg.id %}" style="color: #2563eb; text-decoration: none;">{{ msg.subject }}</a>
+          </td>
+          <td style="padding: 10px;">
+            <span style="background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+              {{ msg.get_message_type_display }}
+            </span>
+          </td>
+          <td style="padding: 10px;">{{ msg.get_status_display }}</td>
+          <td style="padding: 10px; font-size: 13px; color: #6b7280;">{{ msg.created_at|date:"M d, H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color: #9ca3af; text-align: center; padding: 20px;">No messages sent yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.getElementById('select-all').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('input[name="message_ids"]');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+  });
+</script>
+{% endblock %}

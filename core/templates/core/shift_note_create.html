@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}New Shift Note{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+  <h1>📝 New Shift Handover Note</h1>
+  
+  <form method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+      <div>
+        <label for="shift">Shift</label>
+        <select id="shift" name="shift" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+          {% for code, label in shift_choices %}
+            <option value="{{ code }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="shift_date">Date</label>
+        <input type="date" id="shift_date" name="shift_date" required value="{% now 'Y-m-d' %}" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <label for="notes">Shift Notes <small style="color: #6b7280;">(What happened during your shift)</small></label>
+      <textarea id="notes" name="notes" rows="5" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+    </div>
+    
+    <div style="margin-bottom: 16px;">
+      <label for="incidents">Incidents / Issues <small style="color: #6b7280;">(Optional)</small></label>
+      <textarea id="incidents" name="incidents" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <label for="handover_notes">Handover Notes <small style="color: #6b7280;">(Important info for next shift)</small></label>
+      <textarea id="handover_notes" name="handover_notes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+    </div>
+    
+    <div style="display: flex; gap: 12px;">
+      <button type="submit" style="flex: 1;">Save Shift Note</button>
+      <a href="{% url 'shift_notes_list' %}" style="flex: 1; text-align: center; background: #e5e7eb; color: #374151; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: 600;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

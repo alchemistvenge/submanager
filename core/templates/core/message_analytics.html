@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Message Analytics{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+    <h1 style="margin: 0;">📊 Message Analytics</h1>
+    <form method="get" style="display: flex; gap: 8px; align-items: end;">
+      <label style="font-size: 13px;">Last</label>
+      <select name="days" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+        <option value="7" {% if days == 7 %}selected{% endif %}>7 days</option>
+        <option value="30" {% if days == 30 %}selected{% endif %}>30 days</option>
+        <option value="90" {% if days == 90 %}selected{% endif %}>90 days</option>
+        <option value="365" {% if days == 365 %}selected{% endif %}>1 year</option>
+      </select>
+      <button type="submit" style="padding: 8px 16px;">Update</button>
+    </form>
+  </div>
+  
+  <!-- Stats Grid -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="card" style="padding: 20px; text-align: center;">
+      <div style="font-size: 32px; font-weight: 700; color: #3b82f6;">{{ total_messages }}</div>
+      <div style="color: #6b7280; font-size: 14px;">Total Messages</div>
+    </div>
+    <div class="card" style="padding: 20px; text-align: center;">
+      <div style="font-size: 32px; font-weight: 700; color: #ef4444;">{{ overdue_count }}</div>
+      <div style="color: #6b7280; font-size: 14px;">Overdue</div>
+    </div>
+  </div>
+  
+  <!-- By Type -->
+  <div class="card">
+    <h2 style="margin-top: 0;">Messages by Type</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">Type</th>
+          <th style="text-align: right; padding: 10px;">Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in messages_by_type %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 10px;">{{ item.message_type }}</td>
+          <td style="text-align: right; padding: 10px; font-weight: 600;">{{ item.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- By Priority -->
+  <div class="card">
+    <h2 style="margin-top: 0;">Messages by Priority</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">Priority</th>
+          <th style="text-align: right; padding: 10px;">Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in messages_by_priority %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 10px;">{{ item.priority }}</td>
+          <td style="text-align: right; padding: 10px; font-weight: 600;">{{ item.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Status Breakdown -->
+  <div class="card">
+    <h2 style="margin-top: 0;">Status Breakdown</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">Status</th>
+          <th style="text-align: right; padding: 10px;">Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in status_breakdown %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 10px;">{{ item.status }}</td>
+          <td style="text-align: right; padding: 10px; font-weight: 600;">{{ item.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Most Active Senders -->
+  <div class="card">
+    <h2 style="margin-top: 0;">Most Active Senders</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">Staff Member</th>
+          <th style="text-align: right; padding: 10px;">Messages Sent</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in active_senders %}
+        <tr style="border-bottom: 1px solid #f3f4f6;">
+          <td style="padding: 10px;">{{ item.sender__username }}</td>
+          <td style="text-align: right; padding: 10px; font-weight: 600;">{{ item.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <p><a href="{% url 'message_inbox' %}" style="color: #6b7280;">← Back to Inbox</a></p>
+</div>
+{% endblock %}
